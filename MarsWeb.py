@@ -1,7 +1,6 @@
 import numpy  as np
 import pandas as pd
 import streamlit as st
-import os
 import math
 import geocoder
 from scipy import spatial
@@ -51,7 +50,7 @@ def user_input_features():
 
 user_data = user_input_features()
 user_point = (user_data['latitude'], user_data['longitude'])
-Mars_Places = pd.read_csv("MarsPlacesApproved.csv")
+Mars_Places = pd.read_csv("data/MarsPlacesApproved.csv")
 
 def isInPolygon(row):
     #return point.within(row[11])
