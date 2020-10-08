@@ -13,7 +13,7 @@ PIL.Image.MAX_IMAGE_PIXELS = 227687200
 
 mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
 viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
-viking_zoom = PIL.Image.open('data/Mars_Viking_MDIM21_ClrMosaic_1km.jpg')
+viking_zoom = PIL.Image.open('data/Mars_Viking_MDIM21_ClrMosaic_1km_lowres.jpg')
 viking_zoom_width, viking_zoom_height = viking_zoom.size
 earth = plt.imread('data/Earthmap1000x500.jpg')
 
