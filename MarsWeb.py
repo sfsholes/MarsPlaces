@@ -13,14 +13,16 @@ PIL.Image.MAX_IMAGE_PIXELS = 227687200
 
 mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
 viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
-viking_zoom = PIL.Image.open('data/Mars_Viking_MDIM21_ClrMosaic_1km_lowres.jpg')
+viking_zoom = PIL.Image.open('data/Mars_Viking_MDIM21_ClrMosaic_1km_lowres_half.jpg')
 viking_zoom_width, viking_zoom_height = viking_zoom.size
 earth = plt.imread('data/Earthmap1000x500.jpg')
 
+@st.cache()
 def find_nearest_elem(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
+@st.cache()
 def findBBox(point, height, width, buffer):
     """Takes the user input point and finds the bounding box to plot the zoomed image.
     tuple point: tuple of coordinates (latitude, longitude)
@@ -42,6 +44,7 @@ def findBBox(point, height, width, buffer):
     #PIL wants left, top, right, bottom
     return [(x_min, y_max, x_max, y_min), (X[x_min], Y[y_max], X[x_max], Y[y_min])]
 
+@st.cache()
 def cartesian(latitude, longitude, elevation=0):
     # Convert to radians
     latitude *= math.pi / 180
@@ -104,6 +107,7 @@ user_point = (user_data['latitude'], user_data['longitude'])
 # Data retrieved from https://planetarynames.wr.usgs.gov/
 Mars_Places = pd.read_csv("data/MarsPlacesApproved.csv")
 
+@st.cache()
 def isInPolygon(row):
     #return point.within(row[11])
     if (user_point[0]>row[5] and user_point[0]<row[4] and user_point[1]<row[6] and user_point[1]>row[7]):
@@ -114,15 +118,16 @@ def isInPolygon(row):
 Mars_Places['Within'] = Mars_Places.apply(isInPolygon, axis=1)
 located_df = Mars_Places.loc[Mars_Places['Within'] == True]
 
-places = []
-for index, row in Mars_Places.iterrows():
-    coordinates = [row['Center_Latitude'], row['Center_Longitude']]
-    cartesian_coord = cartesian(*coordinates)
-    places.append(cartesian_coord)
-
-tree = spatial.KDTree(places)
-
+@st.cache()
 def find_nearest_loc(lat, lon):
+    places = []
+    for index, row in Mars_Places.iterrows():
+        coordinates = [row['Center_Latitude'], row['Center_Longitude']]
+        cartesian_coord = cartesian(*coordinates)
+        places.append(cartesian_coord)
+
+    tree = spatial.KDTree(places)
+
     cartesian_coord = cartesian(lat, lon)
     closest = tree.query([cartesian_coord], p = 2)
     index = closest[1][0]
@@ -177,9 +182,11 @@ plt.plot(user_point[1], user_point[0], marker="*", markersize=6, markerfacecolor
 
 st.pyplot(fig)
 
+
 #PIL wants left, top, right, bottom
 zbbx = findBBox(user_point, viking_zoom_height, viking_zoom_width, 10)
 vik_zoom_crop = viking_zoom.crop(zbbx[0])
+viking_zoom.close()
 fig2, ax2 = plt.subplots()
 ax2.set_xlim(zbbx[1][0],zbbx[1][2])
 ax2.set_ylim(zbbx[1][3],zbbx[1][1])
