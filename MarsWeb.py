@@ -61,33 +61,43 @@ def cartesian(latitude, longitude, elevation=0):
 def user_input_features():
     input_type = st.sidebar.radio('Input Method', ('Coordinates', 'City Name'))
 
-    lat_input = st.sidebar.number_input('Latitude', min_value=-90., max_value=90., value=43.214408)
-    lon_input = st.sidebar.number_input('Longitude', min_value=-360., max_value=360., value=-76.712236)
-    st.sidebar.write('-'*10)
-    city = st.sidebar.text_input('City Name:', 'Red Creek, NY')
-
     if input_type == 'Coordinates':
-        lat = lat_input
-        lon = lon_input
-        city_output = rg.search((lat_input,lon_input), mode=1)[0]['name']
+        lat = st.sidebar.number_input('Latitude', min_value=-90., max_value=90., value=43.214408)
+        lon = st.sidebar.number_input('Longitude', min_value=-360., max_value=360., value=-76.712236)
+        # if using reverse_geocoder:
+        #city_output = rg.search((lat_input,lon_input), mode=1)[0]['name']
+        city_data = geocoder.osm((lat, lon), method="reverse")
+        if city_data.city is None:
+            if city_data.county is None:
+                city = city_data.address
+            else:
+                city = city_data.county
+        else:
+            city = city_data.city
     elif input_type == 'City Name':
+        city = st.sidebar.text_input('City Name:', 'Red Creek, NY')
         city_data = geocoder.osm(city)
-        lat = city_data.lat
-        lon = city_data.lng
-        city_output = city
+        lat, lon = city_data.lat, city_data.lng
+
+    if city_data.state is None:
+        state = ''
+    else:
+        state = city_data.state
+
     cartesian_coords = cartesian(lat, lon)
     data = {
             'latitude' : lat,
             'longitude' : lon,
             'cartesian' : cartesian_coords,
-            'city' : city_output
+            'city' : city,
+            'state' : state,
+            'country' : city_data.country
     }
     return data
 
 st.sidebar.header('User Input Parameters')
 user_data = user_input_features()
 user_point = (user_data['latitude'], user_data['longitude'])
-user_city = user_data['city']
 
 # Data retrieved from https://planetarynames.wr.usgs.gov/
 Mars_Places = pd.read_csv("data/MarsPlacesApproved.csv")
@@ -119,7 +129,8 @@ def find_nearest_loc(lat, lon):
         'latitude' : Mars_Places.Center_Latitude[index],
         'longitude' : Mars_Places.Center_Longitude[index],
         'distance' : closest[0][0],
-        'quad' : Mars_Places.Quad[index]
+        'quad' : Mars_Places.Quad[index],
+        'feature' : Mars_Places.Feature_Type[index]
     }
 
 closest_place = find_nearest_loc(user_point[0], user_point[1])
@@ -131,7 +142,7 @@ closest_place = find_nearest_loc(user_point[0], user_point[1])
 st.write("""
 # Find Where You Live on Mars
 
-Type in your location in the sidebar (<) to find where you would live on Mars.
+Type in your location in the left sidebar to find where you would live on Mars.
 
 """)
 
@@ -153,10 +164,15 @@ plt.plot(user_point[1], user_point[0], marker="*", markersize=6, markerfacecolor
 st.pyplot(fig)
 
 st.subheader('User Input Coordinates')
-st.write(user_point, user_city)
+st.write(np.round(user_point[0],2), np.round(user_point[1],2), user_data['city'], ',', user_data['state'], ',', user_data['country'])
 
-st.subheader('Closest Place on Mars')
-st.write(closest_place)
+if 'Crater' in closest_place['feature']:
+    crater = ' Crater'
+else:
+    crater = ''
+
+st.subheader('Closest Place on Mars: ')
+st.write(int(closest_place['distance']), 'km from the center of ', closest_place['name'], crater)
 
 #PIL wants left, top, right, bottom
 zbbx = findBBox(user_point, viking_zoom_height, viking_zoom_width, 10)
@@ -166,7 +182,10 @@ ax2.set_xlim(zbbx[1][0],zbbx[1][2])
 ax2.set_ylim(zbbx[1][3],zbbx[1][1])
 ax2.imshow(vik_zoom_crop, zorder=0, extent=(zbbx[1][0], zbbx[1][2], zbbx[1][3], zbbx[1][1]), aspect='equal')
 plt.plot(user_point[1], user_point[0], marker="*", markersize=6, markerfacecolor='w', markeredgecolor='k', markeredgewidth=1)
+if closest_place['longitude'] < zbbx[1][2] and closest_place['longitude'] > zbbx[1][0] and closest_place['latitude'] < zbbx[1][1] and closest_place['latitude'] > zbbx[1][3]:
+    plt.text(closest_place['longitude'], closest_place['latitude'] + 0.35, closest_place['name']+crater, horizontalalignment='center', fontsize=8)
+    plt.plot(closest_place['longitude'], closest_place['latitude'], marker="X", markersize=6, markerfacecolor='y', markeredgecolor='k', markeredgewidth=1)
 st.pyplot(fig2)
 
-st.subheader('Located Within')
-st.write(located_df)
+st.subheader('This place may also be located within the following features:')
+st.write(located_df[['Feature_Name', 'Center_Latitude', 'Center_Longitude']])
