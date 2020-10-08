@@ -3,7 +3,6 @@ import pandas as pd
 import streamlit as st
 import math
 import geocoder
-import reverse_geocoder as rg
 import matplotlib.pyplot as plt
 import PIL
 from scipy import spatial
