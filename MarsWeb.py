@@ -83,6 +83,9 @@ def user_input_features():
     else:
         state = city_data.state
 
+    #st.sidebar.header('OR Find a Famous Place on Mars')
+    #st.sidebar.selectbox('Mars Landmark', ('--Select--','Gale Crater', 'Face on Mars'))
+
     cartesian_coords = cartesian(lat, lon)
     data = {
             'latitude' : lat,
@@ -145,6 +148,18 @@ Type in your location in the left sidebar to find where you would live on Mars.
 
 """)
 
+st.subheader('Location on Earth')
+st.write(np.round(user_point[0],2), np.round(user_point[1],2), user_data['city'], ',', user_data['state'], ',', user_data['country'])
+
+if 'Crater' in closest_place['feature']:
+    crater = ' Crater'
+else:
+    crater = ''
+
+st.subheader('Closest Place on Mars: ')
+st.write(int(closest_place['distance']), 'km from the center of ', closest_place['name'], crater)
+
+
 map_type = st.radio('Type of Map', ('Mars Topography', 'Mars', 'Earth'))
 if map_type == 'Mars':
     map_img = viking
@@ -161,17 +176,6 @@ ax.imshow(map_img, zorder=0, extent = BBox, aspect= 'equal')
 plt.plot(user_point[1], user_point[0], marker="*", markersize=6, markerfacecolor='w', markeredgecolor='k', markeredgewidth=1)
 
 st.pyplot(fig)
-
-st.subheader('User Input Coordinates')
-st.write(np.round(user_point[0],2), np.round(user_point[1],2), user_data['city'], ',', user_data['state'], ',', user_data['country'])
-
-if 'Crater' in closest_place['feature']:
-    crater = ' Crater'
-else:
-    crater = ''
-
-st.subheader('Closest Place on Mars: ')
-st.write(int(closest_place['distance']), 'km from the center of ', closest_place['name'], crater)
 
 #PIL wants left, top, right, bottom
 zbbx = findBBox(user_point, viking_zoom_height, viking_zoom_width, 10)
