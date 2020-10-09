@@ -11,11 +11,18 @@ from scipy import spatial
 # i.e., I trust this image I'm analyzing
 PIL.Image.MAX_IMAGE_PIXELS = 227687200
 
-mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
-viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
-viking_zoom = PIL.Image.open('data/Mars_Viking_MDIM21_ClrMosaic_1km_lowres_half.jpg')
-viking_zoom_width, viking_zoom_height = viking_zoom.size
-earth = plt.imread('data/Earthmap1000x500.jpg')
+@st.cache()
+def open_images():
+    mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
+    viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
+    viking_NW = PIL.Image.open('data/Mars_Viking_1km_NW.jpg')
+    viking_NE = PIL.Image.open('data/Mars_Viking_1km_NE.jpg')
+    viking_SW = PIL.Image.open('data/Mars_Viking_1km_SW.jpg')
+    viking_SE = PIL.Image.open('data/Mars_Viking_1km_SE.jpg')
+    viking_zoom_width, viking_zoom_height = viking_zoom.size
+    earth = plt.imread('data/Earthmap1000x500.jpg')
+
+open_images()
 
 @st.cache()
 def find_nearest_elem(array, value):
