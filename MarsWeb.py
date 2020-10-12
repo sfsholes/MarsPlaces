@@ -12,17 +12,30 @@ from scipy import spatial
 PIL.Image.MAX_IMAGE_PIXELS = 227687200
 
 @st.cache()
-def open_images():
+def loadImages():
     mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
     viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
+    earth = plt.imread('data/Earthmap1000x500.jpg')
     viking_NW = PIL.Image.open('data/Mars_Viking_1km_NW.jpg')
     viking_NE = PIL.Image.open('data/Mars_Viking_1km_NE.jpg')
     viking_SW = PIL.Image.open('data/Mars_Viking_1km_SW.jpg')
     viking_SE = PIL.Image.open('data/Mars_Viking_1km_SE.jpg')
-    viking_zoom_width, viking_zoom_height = viking_zoom.size
-    earth = plt.imread('data/Earthmap1000x500.jpg')
 
-open_images()
+    img_data = {
+                'mola' : mola,
+                'viking' : viking,
+                'earth' : earth,
+                'NW' : Viking_NW,
+                'NE' : Viking_NE,
+                'SW' : Viking_SW,
+                'SE' : Viking_SE }
+    return img_data
+
+images = loadImages()
+NW_width, NW_height = images['NW'].size
+NE_width, NE_height = images['NE'].size
+SW_width, SW_height = images['SW'].size
+SE_width, SW_height = images['SE'].size
 
 @st.cache()
 def find_nearest_elem(array, value):
