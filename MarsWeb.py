@@ -225,7 +225,6 @@ else:
 st.subheader('Closest Place on Mars: ')
 st.write(int(closest_place['distance']), 'km from the center of ', closest_place['name'], crater)
 
-
 map_type = st.radio('Type of Map', ('Mars Topography', 'Mars', 'Earth'))
 if map_type == 'Mars':
     map_img = viking
