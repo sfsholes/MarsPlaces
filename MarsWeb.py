@@ -13,6 +13,8 @@ PIL.Image.MAX_IMAGE_PIXELS = 227687200
 
 @st.cache()
 def loadImages():
+    """Loads up the images into a dictionary. Trying this out to try and take
+    advantage of the st cache function to speed up the app."""
     mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
     viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
     earth = plt.imread('data/Earthmap1000x500.jpg')
@@ -39,6 +41,8 @@ SE_width, SW_height = images['SE'].size
 
 @st.cache()
 def find_nearest_elem(array, value):
+    """This is uesd to quickly find the index of the closest place, i.e., the
+    min value between the input and all features."""
     idx = (np.abs(array - value)).argmin()
     return idx
 
@@ -66,6 +70,8 @@ def findBBox(point, height, width, buffer):
 
 @st.cache()
 def cartesian(latitude, longitude, elevation=0):
+    """Converts the lat/lon values into cartesian (x,y,z) coordinates to speed up
+    finding the closest location."""
     # Convert to radians
     latitude *= math.pi / 180
     if longitude < 0:
@@ -81,6 +87,7 @@ def cartesian(latitude, longitude, elevation=0):
     return (X, Y, Z)
 
 def user_input_features():
+    """Sidebar function to determine user inputs"""
     input_type = st.sidebar.radio('Input Method', ('Coordinates', 'City Name'))
 
     if input_type == 'Coordinates':
@@ -129,6 +136,8 @@ Mars_Places = pd.read_csv("data/MarsPlacesApproved.csv")
 
 @st.cache()
 def isInPolygon(row):
+    """Checks whether the point is in each feature. Note that this assumes they
+    are all rectangles, but in reality they are all oblong polygons."""
     #return point.within(row[11])
     if (user_point[0]>row[5] and user_point[0]<row[4] and user_point[1]<row[6] and user_point[1]>row[7]):
         return True
@@ -140,6 +149,7 @@ located_df = Mars_Places.loc[Mars_Places['Within'] == True]
 
 @st.cache()
 def find_nearest_loc(lat, lon):
+    """Finds the nearest location to the user point"""
     places = []
     for index, row in Mars_Places.iterrows():
         coordinates = [row['Center_Latitude'], row['Center_Longitude']]
