@@ -10,34 +10,24 @@ from scipy import spatial
 # Need to include this otherwise will think it's an attack
 # i.e., I trust this image I'm analyzing
 PIL.Image.MAX_IMAGE_PIXELS = 227687200
+mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
+viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
+earth = plt.imread('data/Earthmap1000x500.jpg')
 
 @st.cache()
-def loadImages():
-    """Loads up the images into a dictionary. Trying this out to try and take
+def loadImages(quad):
+    """Load up the zoomed image. Trying this out to try and take
     advantage of the st cache function to speed up the app."""
-    mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
-    viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
-    earth = plt.imread('data/Earthmap1000x500.jpg')
-    viking_NW = PIL.Image.open('data/Mars_Viking_1km_NW.jpg')
-    viking_NE = PIL.Image.open('data/Mars_Viking_1km_NE.jpg')
-    viking_SW = PIL.Image.open('data/Mars_Viking_1km_SW.jpg')
-    viking_SE = PIL.Image.open('data/Mars_Viking_1km_SE.jpg')
+    if quad == 'NW':
+        zoom = PIL.Image.open('data/Mars_Viking_1km_NW.jpg')
+    elif quad =='NE':
+        zoom = PIL.Image.open('data/Mars_Viking_1km_NE.jpg')
+    elif quad == 'SW':
+        zoom = PIL.Image.open('data/Mars_Viking_1km_SW.jpg')
+    else:
+        zoom = PIL.Image.open('data/Mars_Viking_1km_SE.jpg')
 
-    img_data = {
-                'mola' : mola,
-                'viking' : viking,
-                'earth' : earth,
-                'NW' : Viking_NW,
-                'NE' : Viking_NE,
-                'SW' : Viking_SW,
-                'SE' : Viking_SE }
-    return img_data
-
-images = loadImages()
-NW_width, NW_height = images['NW'].size
-NE_width, NE_height = images['NE'].size
-SW_width, SW_height = images['SW'].size
-SE_width, SW_height = images['SE'].size
+    return zoom
 
 @st.cache()
 def find_nearest_elem(array, value):
@@ -47,14 +37,44 @@ def find_nearest_elem(array, value):
     return idx
 
 @st.cache()
-def findBBox(point, height, width, buffer):
+def find_quadrant(point):
+    """Find which image quadrant the user point is in"""
+    if point[0] >= 0:
+        if point[1] >=0:
+            return 'NE'
+        else:
+            return 'NW'
+    else:
+        if point[1] >= 0:
+            return 'SE'
+        else:
+            return 'SW'
+
+@st.cache()
+def findBBox(point, buffer):
     """Takes the user input point and finds the bounding box to plot the zoomed image.
     tuple point: tuple of coordinates (latitude, longitude)
     int height: image pixel height
     int width: image pixel width
     float buffer: buffer in degrees lat/lon to display"""
-    X = np.linspace(-180,180,width)
-    Y = np.linspace(90,-90, height)
+
+    quad = find_quadrant(point)
+    image = loadImages(quad)
+    width, height = image.size
+
+    if quad in ['NE', 'SE']:
+        X = np.linspace(0,180,width)
+        x_low, x_high = 0, 180
+    else:
+        X = np.linspace(-180,0,width)
+        x_low, x_high = -180, 0
+    if quad in ['NE', 'NW']:
+        Y = np.linspace(90,0,height)
+        y_low, y_high = 0, 90
+    else:
+        Y = np.linspace(0,-90,height)
+        y_low, y_high = -90, 0
+
     lat, lon = point[0], point[1]
     # We want to find the pixel coordinates that correspond to the input point
     px_x = find_nearest_elem(X,lon)
@@ -66,7 +86,7 @@ def findBBox(point, height, width, buffer):
     y_max = find_nearest_elem(Y,lat+buffer)
 
     #PIL wants left, top, right, bottom
-    return [(x_min, y_max, x_max, y_min), (X[x_min], Y[y_max], X[x_max], Y[y_min])]
+    return [(x_min, y_max, x_max, y_min), (X[x_min], Y[y_max], X[x_max], Y[y_min]), image]
 
 @st.cache()
 def cartesian(latitude, longitude, elevation=0):
@@ -214,9 +234,8 @@ st.pyplot(fig)
 
 
 #PIL wants left, top, right, bottom
-zbbx = findBBox(user_point, viking_zoom_height, viking_zoom_width, 10)
-vik_zoom_crop = viking_zoom.crop(zbbx[0])
-viking_zoom.close()
+zbbx = findBBox(user_point, 10)
+vik_zoom_crop = zbbx[2].crop(zbbx[0])
 fig2, ax2 = plt.subplots()
 ax2.set_xlim(zbbx[1][0],zbbx[1][2])
 ax2.set_ylim(zbbx[1][3],zbbx[1][1])
