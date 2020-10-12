@@ -13,9 +13,15 @@ PIL.Image.MAX_IMAGE_PIXELS = 227687200
 
 mola = plt.imread('data/Mars_MGS_colorhillshade_mola_1024.jpg')
 viking = plt.imread('data/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg')
-viking_zoom = PIL.Image.open('data/Mars_Viking_MDIM21_ClrMosaic_1km_lowres_half.jpg')
-viking_zoom_width, viking_zoom_height = viking_zoom.size
 earth = plt.imread('data/Earthmap1000x500.jpg')
+viking_NW = PIL.Image.open('data/Mars_Viking_1km_NW.jpg')
+viking_NE = PIL.Image.open('data/Mars_Viking_1km_NE.jpg')
+viking_SW = PIL.Image.open('data/Mars_Viking_1km_SW.jpg')
+viking_SE = PIL.Image.open('data/Mars_Viking_1km_SE.jpg')
+# I exported all the images to have the same size (within a pixel) so this should be ok
+viking_width, viking_height = viking_NW.size
+
+
 
 @st.cache()
 def find_nearest_elem(array, value):
@@ -64,20 +70,20 @@ def user_input_features():
     input_type = st.sidebar.radio('Input Method', ('Coordinates', 'City Name'))
 
     if input_type == 'Coordinates':
-        lat = st.sidebar.number_input('Latitude', min_value=-90., max_value=90., value=43.214408)
-        lon = st.sidebar.number_input('Longitude', min_value=-360., max_value=360., value=-76.712236)
+        lat = st.sidebar.number_input('Latitude', min_value=-90., max_value=90., value=-4.59)
+        lon = st.sidebar.number_input('Longitude', min_value=-360., max_value=360., value=137.44)
         # if using reverse_geocoder:
         #city_output = rg.search((lat_input,lon_input), mode=1)[0]['name']
         city_data = geocoder.osm((lat, lon), method="reverse")
         if city_data.city is None:
             if city_data.county is None:
-                city = city_data.address
+                city = ''
             else:
                 city = city_data.county
         else:
             city = city_data.city
     elif input_type == 'City Name':
-        city = st.sidebar.text_input('City Name:', 'Red Creek, NY')
+        city = st.sidebar.text_input('City Name:', 'Pasadena, CA')
         city_data = geocoder.osm(city)
         lat, lon = city_data.lat, city_data.lng
 
